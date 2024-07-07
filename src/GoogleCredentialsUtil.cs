@@ -3,9 +3,10 @@ using Soenneker.Utils.File.Abstract;
 using Google.Apis.Auth.OAuth2;
 using System.IO;
 using System;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Soenneker.Utils.SingletonDictionary;
+using Soenneker.Extensions.ValueTask;
 
 namespace Soenneker.Google.Credentials;
 
@@ -16,35 +17,33 @@ public class GoogleCredentialsUtil: IGoogleCredentialsUtil
 
     public GoogleCredentialsUtil(IFileUtil fileUtil)
     {
-        _credentials = new SingletonDictionary<ICredential>(async args =>
+        _credentials = new SingletonDictionary<ICredential>(async (filename, token, args) =>
         {
-            var fileName = (string)args!.First();
+            string path = Path.Combine(Environment.CurrentDirectory, "Resources", filename);
 
-            string path = Path.Combine(Environment.CurrentDirectory, "Resources", fileName);
-
-            MemoryStream stream = await fileUtil.ReadFileToMemoryStream(path);
+            MemoryStream stream = await fileUtil.ReadFileToMemoryStream(path).NoSync();
 
             GoogleCredential credential = GoogleCredential.FromStream(stream).CreateScoped(["https://www.googleapis.com/auth/indexing"]);
 
-            await stream.DisposeAsync();
+            await stream.DisposeAsync().NoSync();
 
             return credential.UnderlyingCredential;
         });
     }
 
-    public ValueTask<ICredential> Get(string fileName)
+    public ValueTask<ICredential> Get(string fileName, CancellationToken cancellationToken = default)
     {
-        return _credentials.Get(fileName, fileName);
+        return _credentials.Get(fileName, cancellationToken);
     }
 
-    public ValueTask Remove(string fileName)
+    public ValueTask Remove(string fileName, CancellationToken cancellationToken = default)
     {
-        return _credentials.Remove(fileName);
+        return _credentials.Remove(fileName, cancellationToken);
     }
 
-    public void RemoveSync(string fileName)
+    public void RemoveSync(string fileName, CancellationToken cancellationToken = default)
     {
-        _credentials.RemoveSync(fileName);
+        _credentials.RemoveSync(fileName, cancellationToken);
     }
 
     public ValueTask DisposeAsync()
