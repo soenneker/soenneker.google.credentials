@@ -21,7 +21,7 @@ public class GoogleCredentialsUtil: IGoogleCredentialsUtil
         {
             string path = Path.Combine(Environment.CurrentDirectory, "Resources", filename);
 
-            MemoryStream stream = await fileUtil.ReadFileToMemoryStream(path).NoSync();
+            MemoryStream stream = await fileUtil.ReadToMemoryStream(path).NoSync();
 
             GoogleCredential credential = GoogleCredential.FromStream(stream).CreateScoped(["https://www.googleapis.com/auth/indexing"]);
 
