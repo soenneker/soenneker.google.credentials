@@ -1,4 +1,4 @@
-# Contributing to Soenneker.Google.Credentials
+﻿# Contributing to Soenneker.Google.Credentials
 
 We're excited that you're interested in contributing!
 
