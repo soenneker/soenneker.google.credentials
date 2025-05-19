@@ -6,19 +6,26 @@ using System.Threading.Tasks;
 namespace Soenneker.Google.Credentials.Abstract;
 
 /// <summary>
-/// An async thread-safe singleton for Google OAuth credentials
+/// A utility for retrieving and caching Google credentials with dynamic scopes
 /// </summary>
-public interface IGoogleCredentialsUtil : IDisposable, IAsyncDisposable
+public interface IGoogleCredentialsUtil : IAsyncDisposable, IDisposable
 {
-    ValueTask<ICredential> Get(string fileName, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Gets a scoped Google credential from a specified service account file.
+    /// </summary>
+    /// <param name="fileName">The name of the credential file (e.g., vertex-ai.json)</param>
+    /// <param name="scopes">The OAuth scopes to request</param>
+    /// <param name="cancellationToken">Optional cancellation token</param>
+    /// <returns>The scoped <see cref="ICredential"/></returns>
+    ValueTask<ICredential> Get(string fileName, string[] scopes, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Should be used if the component using is disposed (unless the entire app is being disposed).
+    /// Removes a cached credential for a specific file and scope set.
     /// </summary>
-    /// <param name="fileName"></param>
-    /// <returns></returns>
-    ValueTask Remove(string fileName, CancellationToken cancellationToken = default);
+    ValueTask Remove(string fileName, string[] scopes, CancellationToken cancellationToken = default);
 
-    /// <inheritdoc cref="Remove(string, CancellationToken)"/>"/>
-    void RemoveSync(string fileName, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Removes a cached credential for a specific file and scope set (synchronous).
+    /// </summary>
+    void RemoveSync(string fileName, string[] scopes, CancellationToken cancellationToken = default);
 }
