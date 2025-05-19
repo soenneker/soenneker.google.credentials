@@ -24,11 +24,9 @@ public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
 
             string path = Path.Combine(Environment.CurrentDirectory, "Resources", fileName);
 
-            await using MemoryStream stream = await fileUtil.ReadToMemoryStream(path).NoSync();
+            await using MemoryStream stream = await fileUtil.ReadToMemoryStream(path, token).NoSync();
 
-            GoogleCredential credential = GoogleCredential
-                .FromStream(stream)
-                .CreateScoped(scopes);
+            GoogleCredential credential = GoogleCredential.FromStream(stream).CreateScoped(scopes);
 
             return credential.UnderlyingCredential;
         });
@@ -36,19 +34,19 @@ public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
 
     public ValueTask<ICredential> Get(string fileName, string[] scopes, CancellationToken cancellationToken = default)
     {
-        var key = $"{fileName}:{string.Join(",", scopes)}";
-        return _credentials.Get(key, cancellationToken, scopes);
+        var key = $"{fileName}:{string.Join("|", scopes)}";
+        return _credentials.Get(key, cancellationToken, (object) scopes);
     }
 
     public ValueTask Remove(string fileName, string[] scopes, CancellationToken cancellationToken = default)
     {
-        var key = $"{fileName}:{string.Join(",", scopes)}";
+        var key = $"{fileName}:{string.Join("|", scopes)}";
         return _credentials.Remove(key, cancellationToken);
     }
 
     public void RemoveSync(string fileName, string[] scopes, CancellationToken cancellationToken = default)
     {
-        var key = $"{fileName}:{string.Join(",", scopes)}";
+        var key = $"{fileName}:{string.Join("|", scopes)}";
         _credentials.RemoveSync(key, cancellationToken);
     }
 
