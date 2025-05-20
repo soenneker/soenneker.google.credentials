@@ -17,10 +17,10 @@ public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
 
     public GoogleCredentialsUtil(IFileUtil fileUtil)
     {
-        _credentials = new SingletonDictionary<ICredential>(async (fileName, token, args) =>
+        _credentials = new SingletonDictionary<ICredential>(async (key, token, args) =>
         {
-            if (args.Length < 1 || args[0] is not string[] scopes)
-                throw new ArgumentException("Scopes must be passed as string[] in args[0]");
+            if (args.Length < 2 || args[0] is not string fileName || args[1] is not string[] scopes)
+                throw new ArgumentException("Expected args[0] as string fileName and args[1] as string[] scopes");
 
             string path = Path.Combine(Environment.CurrentDirectory, "Resources", fileName);
 
@@ -35,7 +35,7 @@ public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
     public ValueTask<ICredential> Get(string fileName, string[] scopes, CancellationToken cancellationToken = default)
     {
         var key = $"{fileName}:{string.Join("|", scopes)}";
-        return _credentials.Get(key, cancellationToken, (object) scopes);
+        return _credentials.Get(key, cancellationToken, fileName, scopes);
     }
 
     public ValueTask Remove(string fileName, string[] scopes, CancellationToken cancellationToken = default)
