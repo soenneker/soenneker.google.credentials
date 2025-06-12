@@ -22,7 +22,7 @@ public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
             if (args.Length < 2 || args[0] is not string fileName || args[1] is not string[] scopes)
                 throw new ArgumentException("Expected args[0] as string fileName and args[1] as string[] scopes");
 
-            string path = Path.Combine(Environment.CurrentDirectory, "Resources", fileName);
+            string path = Path.Combine(Environment.CurrentDirectory, "LocalResources", fileName);
 
             await using MemoryStream stream = await fileUtil.ReadToMemoryStream(path, token).NoSync();
 
@@ -52,13 +52,11 @@ public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
 
     public ValueTask DisposeAsync()
     {
-        GC.SuppressFinalize(this);
         return _credentials.DisposeAsync();
     }
 
     public void Dispose()
     {
-        GC.SuppressFinalize(this);
         _credentials.Dispose();
     }
 }
