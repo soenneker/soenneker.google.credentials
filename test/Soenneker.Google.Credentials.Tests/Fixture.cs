@@ -1,7 +1,5 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Hosting.Internal;
 using Serilog;
 using Soenneker.Fixtures.Unit;
 using Soenneker.Google.Credentials.Registrars;
@@ -27,8 +25,6 @@ public class Fixture : UnitFixture
 
         IConfiguration config = TestUtil.BuildConfig();
         services.AddSingleton(config);
-
-        services.AddSingleton<IHostEnvironment, HostingEnvironment>();
 
         services.AddGoogleCredentialsUtilAsScoped();
     }

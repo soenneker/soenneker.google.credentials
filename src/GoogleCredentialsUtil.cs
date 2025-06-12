@@ -5,7 +5,6 @@ using System.IO;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Hosting;
 using Soenneker.Utils.SingletonDictionary;
 using Soenneker.Extensions.ValueTask;
 
@@ -16,14 +15,14 @@ public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
 {
     private readonly SingletonDictionary<ICredential> _credentials;
 
-    public GoogleCredentialsUtil(IFileUtil fileUtil, IHostEnvironment hostEnv)
+    public GoogleCredentialsUtil(IFileUtil fileUtil)
     {
         _credentials = new SingletonDictionary<ICredential>(async (key, token, args) =>
         {
             if (args.Length < 2 || args[0] is not string fileName || args[1] is not string[] scopes)
                 throw new ArgumentException("Expected args[0] as string fileName and args[1] as string[] scopes");
 
-            string path = Path.Combine(hostEnv.ContentRootPath, "LocalResources", fileName);
+            string path = Path.Combine(AppContext.BaseDirectory, "LocalResources", fileName);
 
             await using MemoryStream stream = await fileUtil.ReadToMemoryStream(path, token).NoSync();
 
