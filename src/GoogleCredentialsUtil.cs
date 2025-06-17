@@ -24,7 +24,7 @@ public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
 
             string path = Path.Combine(AppContext.BaseDirectory, "LocalResources", fileName);
 
-            await using MemoryStream stream = await fileUtil.ReadToMemoryStream(path, token).NoSync();
+            await using MemoryStream stream = await fileUtil.ReadToMemoryStream(path, true, token).NoSync();
 
             GoogleCredential credential = GoogleCredential.FromStream(stream).CreateScoped(scopes);
 

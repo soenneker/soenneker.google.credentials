@@ -15,8 +15,7 @@ public static class GoogleCredentialsUtilRegistrar
     /// </summary>
     public static IServiceCollection AddGoogleCredentialsUtilAsSingleton(this IServiceCollection services)
     {
-        services.AddFileUtilAsSingleton();
-        services.TryAddSingleton<IGoogleCredentialsUtil, GoogleCredentialsUtil>();
+        services.AddFileUtilAsSingleton().TryAddSingleton<IGoogleCredentialsUtil, GoogleCredentialsUtil>();
         return services;
     }
 
@@ -25,8 +24,7 @@ public static class GoogleCredentialsUtilRegistrar
     /// </summary>
     public static IServiceCollection AddGoogleCredentialsUtilAsScoped(this IServiceCollection services)
     {
-        services.AddFileUtilAsScoped();
-        services.TryAddScoped<IGoogleCredentialsUtil, GoogleCredentialsUtil>();
+        services.AddFileUtilAsScoped().TryAddScoped<IGoogleCredentialsUtil, GoogleCredentialsUtil>();
         return services;
     }
 }
