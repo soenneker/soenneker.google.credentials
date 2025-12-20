@@ -1,8 +1,8 @@
 using Soenneker.Google.Credentials.Abstract;
 using Soenneker.Utils.File.Abstract;
 using Google.Apis.Auth.OAuth2;
-using System.IO;
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Soenneker.Utils.SingletonDictionary;
@@ -13,50 +13,49 @@ namespace Soenneker.Google.Credentials;
 ///<inheritdoc cref="IGoogleCredentialsUtil"/>
 public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
 {
-    private readonly SingletonDictionary<ICredential> _credentials;
+    private readonly SingletonDictionary<ICredential, string, string[]> _credentials;
 
     public GoogleCredentialsUtil(IFileUtil fileUtil)
     {
-        _credentials = new SingletonDictionary<ICredential>(async (key, token, args) =>
+        _credentials = new SingletonDictionary<ICredential, string, string[]>(async (key, token, fileName, scopes) =>
         {
-            if (args.Length < 2 || args[0] is not string fileName || args[1] is not string[] scopes)
-                throw new ArgumentException("Expected args[0] as string fileName and args[1] as string[] scopes");
-
             string path = Path.Combine(AppContext.BaseDirectory, "LocalResources", fileName);
 
-            await using MemoryStream stream = await fileUtil.ReadToMemoryStream(path, true, token).NoSync();
+            await using MemoryStream stream = await fileUtil.ReadToMemoryStream(path, true, token)
+                                                            .NoSync();
 
-            GoogleCredential credential = GoogleCredential.FromStream(stream).CreateScoped(scopes);
+            // Service account JSON -> ServiceAccountCredential via CredentialFactory, then to GoogleCredential, then scope.
+            ServiceAccountCredential sa = await CredentialFactory.FromStreamAsync<ServiceAccountCredential>(stream, token)
+                                                                 .ConfigureAwait(false);
 
-            return credential.UnderlyingCredential;
+            GoogleCredential googleCredential = sa.ToGoogleCredential()
+                                                  .CreateScoped(scopes);
+
+            return googleCredential.UnderlyingCredential;
         });
     }
 
     public ValueTask<ICredential> Get(string fileName, string[] scopes, CancellationToken cancellationToken = default)
     {
-        var key = $"{fileName}:{string.Join("|", scopes)}";
-        return _credentials.Get(key, cancellationToken, fileName, scopes);
+        string key = BuildKey(fileName, scopes);
+        return _credentials.Get(key, fileName, scopes, cancellationToken);
     }
 
     public ValueTask Remove(string fileName, string[] scopes, CancellationToken cancellationToken = default)
     {
-        var key = $"{fileName}:{string.Join("|", scopes)}";
+        string key = BuildKey(fileName, scopes);
         return _credentials.Remove(key, cancellationToken);
     }
 
     public void RemoveSync(string fileName, string[] scopes, CancellationToken cancellationToken = default)
     {
-        var key = $"{fileName}:{string.Join("|", scopes)}";
+        string key = BuildKey(fileName, scopes);
         _credentials.RemoveSync(key, cancellationToken);
     }
 
-    public ValueTask DisposeAsync()
-    {
-        return _credentials.DisposeAsync();
-    }
+    public ValueTask DisposeAsync() => _credentials.DisposeAsync();
 
-    public void Dispose()
-    {
-        _credentials.Dispose();
-    }
+    public void Dispose() => _credentials.Dispose();
+
+    private static string BuildKey(string fileName, string[] scopes) => $"{fileName}:{string.Join("|", scopes)}";
 }
