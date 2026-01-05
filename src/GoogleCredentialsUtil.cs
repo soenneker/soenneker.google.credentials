@@ -14,25 +14,29 @@ namespace Soenneker.Google.Credentials;
 public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
 {
     private readonly SingletonDictionary<ICredential, string, string[]> _credentials;
+    private readonly IFileUtil _fileUtil;
 
     public GoogleCredentialsUtil(IFileUtil fileUtil)
     {
-        _credentials = new SingletonDictionary<ICredential, string, string[]>(async (key, token, fileName, scopes) =>
-        {
-            string path = Path.Combine(AppContext.BaseDirectory, "LocalResources", fileName);
+        _fileUtil = fileUtil;
+        _credentials = new SingletonDictionary<ICredential, string, string[]>(CreateCredential);
+    }
 
-            await using MemoryStream stream = await fileUtil.ReadToMemoryStream(path, true, token)
-                                                            .NoSync();
+    private async ValueTask<ICredential> CreateCredential(string key, CancellationToken token, string fileName, string[] scopes)
+    {
+        string path = Path.Combine(AppContext.BaseDirectory, "LocalResources", fileName);
 
-            // Service account JSON -> ServiceAccountCredential via CredentialFactory, then to GoogleCredential, then scope.
-            ServiceAccountCredential sa = await CredentialFactory.FromStreamAsync<ServiceAccountCredential>(stream, token)
-                                                                 .ConfigureAwait(false);
+        await using MemoryStream stream = await _fileUtil.ReadToMemoryStream(path, true, token)
+                                                         .NoSync();
 
-            GoogleCredential googleCredential = sa.ToGoogleCredential()
-                                                  .CreateScoped(scopes);
+        // Service account JSON -> ServiceAccountCredential via CredentialFactory, then to GoogleCredential, then scope.
+        ServiceAccountCredential sa = await CredentialFactory.FromStreamAsync<ServiceAccountCredential>(stream, token)
+                                                             .ConfigureAwait(false);
 
-            return googleCredential.UnderlyingCredential;
-        });
+        GoogleCredential googleCredential = sa.ToGoogleCredential()
+                                              .CreateScoped(scopes);
+
+        return googleCredential.UnderlyingCredential;
     }
 
     public ValueTask<ICredential> Get(string fileName, string[] scopes, CancellationToken cancellationToken = default)
