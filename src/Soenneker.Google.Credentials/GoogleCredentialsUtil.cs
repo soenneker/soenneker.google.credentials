@@ -46,7 +46,7 @@ public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
         return _credentials.Get(key, fileName, scopes, cancellationToken);
     }
 
-    public ValueTask Remove(string fileName, string[] scopes, CancellationToken cancellationToken = default)
+    public ValueTask<bool> Remove(string fileName, string[] scopes, CancellationToken cancellationToken = default)
     {
         var key = new CredentialKey(fileName, scopes);
         return _credentials.Remove(key, cancellationToken);

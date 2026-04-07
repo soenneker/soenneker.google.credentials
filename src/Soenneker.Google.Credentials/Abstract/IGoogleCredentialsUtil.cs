@@ -22,7 +22,7 @@ public interface IGoogleCredentialsUtil : IAsyncDisposable, IDisposable
     /// <summary>
     /// Removes a cached credential for a specific file and scope set.
     /// </summary>
-    ValueTask Remove(string fileName, string[] scopes, CancellationToken cancellationToken = default);
+    ValueTask<bool> Remove(string fileName, string[] scopes, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Removes a cached credential for a specific file and scope set (synchronous).
