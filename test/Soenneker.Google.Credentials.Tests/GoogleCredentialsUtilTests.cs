@@ -1,20 +1,19 @@
 using Soenneker.Google.Credentials.Abstract;
-using Soenneker.Tests.FixturedUnit;
-using Xunit;
+using Soenneker.Tests.HostedUnit;
 
 namespace Soenneker.Google.Credentials.Tests;
 
-[Collection("Collection")]
-public class GoogleCredentialsUtilTests : FixturedUnitTest
+[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
+public class GoogleCredentialsUtilTests : HostedUnitTest
 {
     private readonly IGoogleCredentialsUtil _util;
 
-    public GoogleCredentialsUtilTests(Fixture fixture, ITestOutputHelper output) : base(fixture, output)
+    public GoogleCredentialsUtilTests(Host host) : base(host)
     {
         _util = Resolve<IGoogleCredentialsUtil>(true);
     }
 
-    [Fact]
+    [Test]
     public void Default()
     {
 
