@@ -13,6 +13,8 @@ public static class GoogleCredentialsUtilRegistrar
     /// <summary>
     /// Adds <see cref="IGoogleCredentialsUtil"/> as a singleton service. <para/>
     /// </summary>
+    /// <param name="services">Service collection that receives the registration.</param>
+    /// <returns>The same service collection, so additional registrations can be chained.</returns>
     public static IServiceCollection AddGoogleCredentialsUtilAsSingleton(this IServiceCollection services)
     {
         services.AddFileUtilAsSingleton().TryAddSingleton<IGoogleCredentialsUtil, GoogleCredentialsUtil>();
@@ -22,6 +24,8 @@ public static class GoogleCredentialsUtilRegistrar
     /// <summary>
     /// Adds <see cref="IGoogleCredentialsUtil"/> as a scoped service. <para/>
     /// </summary>
+    /// <param name="services">Service collection that receives the registration.</param>
+    /// <returns>The same service collection, so additional registrations can be chained.</returns>
     public static IServiceCollection AddGoogleCredentialsUtilAsScoped(this IServiceCollection services)
     {
         services.AddFileUtilAsScoped().TryAddScoped<IGoogleCredentialsUtil, GoogleCredentialsUtil>();
