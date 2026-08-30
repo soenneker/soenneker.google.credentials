@@ -6,7 +6,7 @@ using Soenneker.Utils.File.Registrars;
 namespace Soenneker.Google.Credentials.Registrars;
 
 /// <summary>
-/// An async thread-safe singleton for Google OAuth credentials
+/// Registers the service-account credential cache.
 /// </summary>
 public static class GoogleCredentialsUtilRegistrar
 {

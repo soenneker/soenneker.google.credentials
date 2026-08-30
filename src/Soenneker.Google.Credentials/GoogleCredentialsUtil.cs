@@ -12,7 +12,6 @@ using Soenneker.Google.Credentials.Utils;
 
 namespace Soenneker.Google.Credentials;
 
-/// <inheritdoc cref="IGoogleCredentialsUtil"/>
 public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
 {
     private readonly SingletonKeyDictionary<CredentialKey, ICredential, string, string[]> _credentials;
@@ -26,7 +25,15 @@ public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
 
     private async ValueTask<ICredential> CreateCredential(CredentialKey _, string fileName, string[] scopes, CancellationToken token)
     {
-        string path = Path.Combine(AppContext.BaseDirectory, "LocalResources", fileName);
+        string resourcesDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "LocalResources"));
+        string path = Path.GetFullPath(Path.Combine(resourcesDirectory, fileName));
+        string relativePath = Path.GetRelativePath(resourcesDirectory, path);
+
+        if (Path.IsPathRooted(relativePath) || relativePath == ".." || relativePath.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal) ||
+            relativePath.StartsWith($"..{Path.AltDirectorySeparatorChar}", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("The credential file must be located beneath the application's LocalResources directory.");
+        }
 
         await using MemoryStream stream = await _fileUtil.ReadToMemoryStream(path, true, token)
                                                          .NoSync();
@@ -42,8 +49,9 @@ public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
 
     public ValueTask<ICredential> Get(string fileName, string[] scopes, CancellationToken cancellationToken = default)
     {
-        var key = new CredentialKey(fileName, scopes);
-        return _credentials.Get(key, fileName, scopes, cancellationToken);
+        string[] scopeSnapshot = [.. scopes];
+        var key = new CredentialKey(fileName, scopeSnapshot);
+        return _credentials.Get(key, fileName, scopeSnapshot, cancellationToken);
     }
 
     public ValueTask<bool> Remove(string fileName, string[] scopes, CancellationToken cancellationToken = default)

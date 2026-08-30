@@ -5,7 +5,7 @@
 
 # Soenneker.Google.Credentials
 
-A utility for retrieving and caching Google credentials with dynamic scopes.
+Loads Google service-account JSON files from an application's output directory and caches scoped credentials for reuse.
 
 ## Install
 
@@ -13,35 +13,51 @@ A utility for retrieving and caching Google credentials with dynamic scopes.
 dotnet add package Soenneker.Google.Credentials
 ```
 
-## Quick start
+## Add the credential file
+
+Keep the service-account JSON outside source control and copy it to `LocalResources` in the application output:
+
+```xml
+<ItemGroup>
+  <Content Include="LocalResources\google-service-account.json"
+           CopyToOutputDirectory="PreserveNewest" />
+</ItemGroup>
+```
+
+`Get()` accepts a path relative to that `LocalResources` directory. Absolute paths and paths that escape it are rejected.
+
+## Register
 
 ```csharp
 using Soenneker.Google.Credentials.Registrars;
 using Microsoft.Extensions.DependencyInjection;
 
-var services = new ServiceCollection();
-var result = services.AddGoogleCredentialsUtilAsSingleton();
+services.AddGoogleCredentialsUtilAsSingleton();
 ```
 
-Adds `IGoogleCredentialsUtil` as a singleton service.
+Singleton registration is recommended when scoped consumers should share the credential cache. Disposing a scoped consumer does not destroy this singleton. `AddGoogleCredentialsUtilAsScoped()` remains available when each scope deliberately needs an independent cache.
 
-## What you get
+## Get a scoped credential
 
-- `IGoogleCredentialsUtil` — A utility for retrieving and caching Google credentials with dynamic scopes.
-- `GoogleCredentialsUtilRegistrar` — An async thread-safe singleton for Google OAuth credentials.
+```csharp
+ICredential credential = await credentials.Get(
+    "google-service-account.json",
+    ["https://www.googleapis.com/auth/indexing"],
+    cancellationToken);
+```
+
+The file must contain a Google service-account credential. Application-default credentials and interactive user OAuth flows are not loaded by this package.
 
 ## API at a glance
 
 | API | What it does | Result / important behavior |
 | --- | --- | --- |
-| `IGoogleCredentialsUtil.Get(fileName, scopes, cancellationToken)` | Gets a scoped Google credential from a specified service account file. | The scoped `ICredential`. |
-| `IGoogleCredentialsUtil.Remove(fileName, scopes, cancellationToken)` | Removes a cached credential for a specific file and scope set. | true if removes a cached credential for a specific file and scope set; otherwise, false. |
-| `IGoogleCredentialsUtil.RemoveSync(fileName, scopes, cancellationToken)` | Removes a cached credential for a specific file and scope set (synchronous). | Returns no value; the requested change is complete when the method returns. |
-| `GoogleCredentialsUtilRegistrar.AddGoogleCredentialsUtilAsSingleton(services)` | Adds `IGoogleCredentialsUtil` as a singleton service. | The same service collection, so additional registrations can be chained. |
-| `GoogleCredentialsUtilRegistrar.AddGoogleCredentialsUtilAsScoped(services)` | Adds `IGoogleCredentialsUtil` as a scoped service. | The same service collection, so additional registrations can be chained. |
+| `Get(fileName, scopes)` | Loads and scopes a credential, or returns its cached instance. | Filename and ordered scope values form the cache key. |
+| `Remove(fileName, scopes)` | Asynchronously removes the matching cached credential. | Returns whether an entry existed. |
+| `RemoveSync(fileName, scopes)` | Synchronously removes the matching cached credential. | Useful only when asynchronous removal is not available to the caller. |
 
 ## Practical notes
 
-- Cancellation stops pending work; it does not undo work that has already completed.
-- Calls that return a cached or singleton value reuse the same instance until the owning service is disposed.
-- Dispose instances you own when their scope ends so held resources can be released.
+- Scope arrays are snapshotted when a credential is cached, so callers may safely reuse or modify their original arrays afterward.
+- Scope order is significant: the same scopes in a different order create a different cache entry.
+- Let the DI container dispose registered instances. Manually constructed instances must be disposed to release cached credentials.

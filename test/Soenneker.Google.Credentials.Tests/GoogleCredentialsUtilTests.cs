@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Soenneker.Google.Credentials.Abstract;
 using Soenneker.Tests.HostedUnit;
 
@@ -17,5 +19,13 @@ public class GoogleCredentialsUtilTests : HostedUnitTest
     public void Default()
     {
 
+    }
+
+    [Test]
+    public async Task Get_rejects_paths_outside_local_resources()
+    {
+        Func<Task> act = async () => await _util.Get("..\\service-account.json", []);
+
+        await Assert.That(act).Throws<InvalidOperationException>();
     }
 }
