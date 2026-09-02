@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Soenneker.Google.Credentials.Abstract;
 using Soenneker.Tests.HostedUnit;
@@ -23,9 +24,9 @@ public class GoogleCredentialsUtilTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Get_rejects_paths_outside_local_resources()
+    public async Task Get_rejects_paths_outside_local_resources(CancellationToken cancellationToken)
     {
-        Func<Task> act = async () => await _util.Get(Path.Combine("..", "service-account.json"), []);
+        Func<Task> act = async () => await _util.Get(Path.Combine("..", "service-account.json"), [], cancellationToken: cancellationToken);
 
         await Assert.That(act).Throws<InvalidOperationException>();
     }
