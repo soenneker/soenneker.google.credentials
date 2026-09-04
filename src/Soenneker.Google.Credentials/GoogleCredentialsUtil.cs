@@ -12,6 +12,7 @@ using Soenneker.Google.Credentials.Utils;
 
 namespace Soenneker.Google.Credentials;
 
+/// <inheritdoc cref="IGoogleCredentialsUtil" />
 public sealed class GoogleCredentialsUtil : IGoogleCredentialsUtil
 {
     private readonly SingletonKeyDictionary<CredentialKey, ICredential, string, string[]> _credentials;
