@@ -24,7 +24,7 @@ public class GoogleCredentialsUtilTests : HostedUnitTest
     }
 
     [Test]
-    public async Task Get_rejects_paths_outside_local_resources(CancellationToken cancellationToken)
+    public async ValueTask Get_rejects_paths_outside_local_resources(CancellationToken cancellationToken)
     {
         Func<Task> act = async () => await _util.Get(Path.Combine("..", "service-account.json"), [], cancellationToken: cancellationToken);
 
